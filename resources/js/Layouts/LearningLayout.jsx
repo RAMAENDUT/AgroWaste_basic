@@ -5,6 +5,7 @@ export default function LearningLayout({ children }) {
     const { auth } = usePage().props;
     const { post } = useForm();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [myCoursesOpen, setMyCoursesOpen] = useState(false);
 
     // Persist sidebar state in localStorage
     useEffect(() => {
@@ -12,12 +13,22 @@ export default function LearningLayout({ children }) {
         if (savedState !== null) {
             setSidebarOpen(savedState === 'true');
         }
+        const savedMyCoursesState = localStorage.getItem('myCoursesOpen');
+        if (savedMyCoursesState !== null) {
+            setMyCoursesOpen(savedMyCoursesState === 'true');
+        }
     }, []);
 
     const toggleSidebar = () => {
         const newState = !sidebarOpen;
         setSidebarOpen(newState);
         localStorage.setItem('sidebarOpen', newState.toString());
+    };
+
+    const toggleMyCourses = () => {
+        const newState = !myCoursesOpen;
+        setMyCoursesOpen(newState);
+        localStorage.setItem('myCoursesOpen', newState.toString());
     };
 
     const logout = () => {
@@ -60,42 +71,71 @@ export default function LearningLayout({ children }) {
                             </svg>
                             {sidebarOpen && <span className="whitespace-nowrap">Home</span>}
                         </Link>
+                        
                         <Link 
-                            href={route('modules.index')} 
+                            href={route('courses.index')} 
                             className={`flex items-center gap-3 py-2.5 rounded-md transition ${
-                                route().current('modules.*') ? 'bg-green-600 text-white shadow' : 'text-green-100 hover:bg-green-700/50'
+                                route().current('courses.index') ? 'bg-green-600 text-white shadow' : 'text-green-100 hover:bg-green-700/50'
                             } ${sidebarOpen ? 'px-3' : 'px-2 justify-center'}`}
-                            title={!sidebarOpen ? 'Modul' : ''}
+                            title={!sidebarOpen ? 'Take Course' : ''}
                         >
                             <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                             </svg>
-                            {sidebarOpen && <span className="whitespace-nowrap">Modul</span>}
+                            {sidebarOpen && <span className="whitespace-nowrap">Take Course</span>}
                         </Link>
-                        <Link 
-                            href={route('videos.index')} 
-                            className={`flex items-center gap-3 py-2.5 rounded-md transition ${
-                                route().current('videos.*') ? 'bg-green-600 text-white shadow' : 'text-green-100 hover:bg-green-700/50'
+
+                        <button
+                            onClick={toggleMyCourses}
+                            className={`w-full flex items-center gap-3 py-2.5 rounded-md transition ${
+                                route().current('courses.show') || route().current('course-contents.*') ? 'bg-green-600 text-white shadow' : 'text-green-100 hover:bg-green-700/50'
                             } ${sidebarOpen ? 'px-3' : 'px-2 justify-center'}`}
-                            title={!sidebarOpen ? 'Video' : ''}
+                            title={!sidebarOpen ? 'My Courses' : ''}
                         >
                             <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                             </svg>
-                            {sidebarOpen && <span className="whitespace-nowrap">Video</span>}
-                        </Link>
-                        <Link 
-                            href={route('quizzes.index')} 
-                            className={`flex items-center gap-3 py-2.5 rounded-md transition ${
-                                route().current('quizzes.*') ? 'bg-green-600 text-white shadow' : 'text-green-100 hover:bg-green-700/50'
-                            } ${sidebarOpen ? 'px-3' : 'px-2 justify-center'}`}
-                            title={!sidebarOpen ? 'Quiz' : ''}
-                        >
-                            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            {sidebarOpen && <span className="whitespace-nowrap">Quiz</span>}
-                        </Link>
+                            {sidebarOpen && (
+                                <>
+                                    <span className="flex-1 text-left whitespace-nowrap">My Courses</span>
+                                    <svg 
+                                        className={`w-4 h-4 transition-transform ${myCoursesOpen ? 'rotate-180' : ''}`}
+                                        fill="none" 
+                                        stroke="currentColor" 
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </>
+                            )}
+                        </button>
+
+                        {myCoursesOpen && sidebarOpen && (
+                            <div className="space-y-1 pl-3">
+                                <Link 
+                                    href={route('my-courses.on-progress')} 
+                                    className="flex items-center gap-3 py-2 px-3 rounded-md transition text-green-100 hover:bg-green-700/50 text-sm"
+                                >
+                                    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span className="whitespace-nowrap">On Progress</span>
+                                </Link>
+
+                                <Link 
+                                    href={route('my-courses.completed')} 
+                                    className="flex items-center gap-3 py-2 px-3 rounded-md transition text-green-100 hover:bg-green-700/50 text-sm"
+                                >
+                                    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span className="whitespace-nowrap">Completed</span>
+                                </Link>
+                            </div>
+                        )}
+
+                        <div className={`${sidebarOpen ? 'mx-3' : 'mx-1'} my-3 border-t border-green-700/40`}></div>
+
                         <Link 
                             href={route('profile.edit')} 
                             className={`flex items-center gap-3 py-2.5 rounded-md transition ${

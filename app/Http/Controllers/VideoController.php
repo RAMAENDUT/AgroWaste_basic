@@ -74,11 +74,22 @@ class VideoController extends Controller
             ->get();
 
         // Get next and previous videos
-        $nextVideo = $video->getNextVideo();
-        $previousVideo = $video->getPreviousVideo();
+        $currentIndex = $videos->search(function($v) use ($video) {
+            return $v->id === $video->id;
+        });
+        
+        $nextVideo = $currentIndex !== false && $currentIndex < $videos->count() - 1 
+            ? $videos[$currentIndex + 1] 
+            : null;
+            
+        $previousVideo = $currentIndex !== false && $currentIndex > 0 
+            ? $videos[$currentIndex - 1] 
+            : null;
 
         // Get quiz for this module
-        $quiz = $module->getFirstQuiz();
+        $quiz = \App\Models\Quiz::where('module_id', $module->id)
+            ->where('is_active', true)
+            ->first();
 
         // Get or create progress
         $progress = null;
@@ -91,10 +102,48 @@ class VideoController extends Controller
             ]);
         }
 
-        return view('videos.show', compact('video', 'module', 'videos', 'nextVideo', 'previousVideo', 'quiz', 'progress'));
+        return Inertia::render('Videos/Show', [
+            'video' => [
+                'id' => $video->id,
+                'title' => $video->title,
+                'description' => $video->description,
+                'duration_seconds' => $video->duration_seconds,
+                'video_url' => $video->video_url,
+            ],
+            'module' => [
+                'id' => $module->id,
+                'title' => $module->title,
+                'description' => $module->description,
+                'thumbnail' => $module->thumbnail,
+            ],
+            'videos' => $videos->map(function($v) {
+                return [
+                    'id' => $v->id,
+                    'title' => $v->title,
+                    'duration_seconds' => $v->duration_seconds,
+                ];
+            })->toArray(),
+            'nextVideo' => $nextVideo ? [
+                'id' => $nextVideo->id,
+                'title' => $nextVideo->title,
+            ] : null,
+            'previousVideo' => $previousVideo ? [
+                'id' => $previousVideo->id,
+                'title' => $previousVideo->title,
+            ] : null,
+            'quiz' => $quiz ? [
+                'id' => $quiz->id,
+                'title' => $quiz->title,
+            ] : null,
+            'progress' => $progress ? [
+                'video_completed' => $progress->video_completed,
+                'module_completed' => $progress->module_completed,
+                'quiz_completed' => $progress->quiz_completed,
+            ] : null,
+        ]);
     }
 
-    public function markComplete($id)
+    public function complete($id)
     {
         if (!Auth::check()) {
             return redirect()->route('login');
@@ -105,6 +154,8 @@ class VideoController extends Controller
         $progress = UserModuleProgress::firstOrCreate([
             'user_id' => Auth::id(),
             'module_id' => $video->module_id,
+        ], [
+            'started_at' => now(),
         ]);
 
         $progress->update([
@@ -116,6 +167,6 @@ class VideoController extends Controller
             $progress->update(['completed_at' => now()]);
         }
 
-        return back()->with('success', 'Video telah selesai ditonton!');
+        return back();
     }
 }

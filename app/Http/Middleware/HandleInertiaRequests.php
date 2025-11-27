@@ -35,14 +35,21 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $hasEnrollments = false;
+        if ($request->user()) {
+            $hasEnrollments = \App\Models\CourseEnrollment::where('user_id', $request->user()->id)->exists();
+        }
+
         return [
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user(),
+                'hasEnrollments' => $hasEnrollments,
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
+                'quiz_result' => fn () => $request->session()->get('quiz_result'),
             ],
         ];
     }

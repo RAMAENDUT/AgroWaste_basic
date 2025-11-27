@@ -6,6 +6,8 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\VideoController;
 use App\Http\Controllers\QuizController;
+use App\Http\Controllers\CourseController;
+use App\Http\Controllers\CourseContentController;
 
 // Test page (for debugging)
 Route::get('/test', function () {
@@ -34,8 +36,6 @@ Route::middleware('guest')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
 });
 
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-
 // Admin routes
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'index'])->name('dashboard');
@@ -49,6 +49,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
 
 // Protected routes (requires authentication)
 Route::middleware('auth')->group(function () {
+    // Logout
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    
     // Home/Dashboard
     Route::get('/home', [HomeController::class, 'index'])->name('home');
     
@@ -60,7 +63,7 @@ Route::middleware('auth')->group(function () {
     // Videos
     Route::get('/videos', [VideoController::class, 'index'])->name('videos.index');
     Route::get('/videos/{id}', [VideoController::class, 'show'])->name('videos.show');
-    Route::post('/videos/{id}/complete', [VideoController::class, 'markComplete'])->name('videos.complete');
+    Route::post('/videos/{id}/complete', [VideoController::class, 'complete'])->name('videos.complete');
     
     // Quizzes
     Route::get('/quizzes', [QuizController::class, 'index'])->name('quizzes.index');
@@ -72,4 +75,15 @@ Route::middleware('auth')->group(function () {
     // Profile
     Route::get('/profile', [HomeController::class, 'profile'])->name('profile.edit');
     Route::put('/profile', [HomeController::class, 'updateProfile'])->name('profile.update');
+    
+    // Courses
+    Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
+    Route::post('/courses/{id}/enroll', [CourseController::class, 'enroll'])->name('courses.enroll');
+    Route::get('/courses/{id}', [CourseController::class, 'show'])->name('courses.show');
+    Route::get('/courses/{courseId}/content/{contentId}', [CourseContentController::class, 'show'])->name('course-contents.show');
+    Route::post('/courses/{courseId}/content/{contentId}/submit-quiz', [CourseContentController::class, 'submitQuiz'])->name('course-contents.submit-quiz');
+    
+    // My Courses
+    Route::get('/my-courses/on-progress', [CourseController::class, 'onProgress'])->name('my-courses.on-progress');
+    Route::get('/my-courses/completed', [CourseController::class, 'completed'])->name('my-courses.completed');
 });

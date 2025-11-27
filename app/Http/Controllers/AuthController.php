@@ -70,6 +70,14 @@ class AuthController extends Controller
             'role_id' => 2, // Default role: User
         ]);
 
+        // Log registration activity
+        \App\Models\UserActivity::create([
+            'user_id' => $user->id,
+            'activity_type' => 'register',
+            'activity_title' => 'Mendaftar akun',
+            'activity_description' => 'Selamat bergabung di AgroWaste Academy!',
+        ]);
+
         Auth::login($user);
         $request->session()->regenerate();
 

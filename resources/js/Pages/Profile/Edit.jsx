@@ -2,7 +2,7 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import LearningLayout from '@/Layouts/LearningLayout';
 import { useState } from 'react';
 
-export default function ProfileEdit({ auth, stats, moduleProgress, videoProgress, quizProgress, activities }) {
+export default function ProfileEdit({ auth, stats, courseProgress, activities, achievements }) {
     const { data, setData, put, processing, errors } = useForm({
         name: auth.user.name,
         email: auth.user.email,
@@ -10,7 +10,7 @@ export default function ProfileEdit({ auth, stats, moduleProgress, videoProgress
         address: auth.user.address || '',
     });
 
-    const [activeTab, setActiveTab] = useState('modul');
+    const [activeTab, setActiveTab] = useState('course');
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -61,31 +61,9 @@ export default function ProfileEdit({ auth, stats, moduleProgress, videoProgress
                                                     <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
                                                 </svg>
                                             </div>
-                                            <span className="text-sm font-medium text-gray-700">Modul Selesai</span>
+                                            <span className="text-sm font-medium text-gray-700">Course Selesai</span>
                                         </div>
-                                        <span className="text-lg font-bold text-green-700">{stats.completedModules}</span>
-                                    </div>
-                                    <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 rounded bg-orange-600 flex items-center justify-center">
-                                                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
-                                                </svg>
-                                            </div>
-                                            <span className="text-sm font-medium text-gray-700">Video Ditonton</span>
-                                        </div>
-                                        <span className="text-lg font-bold text-orange-700">{stats.completedVideos}</span>
-                                    </div>
-                                    <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 rounded bg-yellow-600 flex items-center justify-center">
-                                                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                                </svg>
-                                            </div>
-                                            <span className="text-sm font-medium text-gray-700">Quiz Lulus</span>
-                                        </div>
-                                        <span className="text-lg font-bold text-yellow-700">{stats.passedQuizzes}</span>
+                                        <span className="text-lg font-bold text-green-700">{stats.completedCourses}</span>
                                     </div>
                                     <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
                                         <div className="flex items-center gap-2">
@@ -94,53 +72,38 @@ export default function ProfileEdit({ auth, stats, moduleProgress, videoProgress
                                                     <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
                                                 </svg>
                                             </div>
-                                            <span className="text-sm font-medium text-gray-700">Nilai Rata-rata</span>
+                                            <span className="text-sm font-medium text-gray-700">Nilai Rata-rata Quiz</span>
                                         </div>
-                                        <span className="text-lg font-bold text-blue-700">{stats.averageScore}%</span>
+                                        <span className="text-lg font-bold text-blue-700">{stats.averageQuizScore}%</span>
                                     </div>
                                 </div>
 
                                 {/* Pencapaian */}
                                 <div className="border-t pt-4">
                                     <h3 className="text-sm font-semibold text-gray-900 mb-3">Pencapaian</h3>
-                                    <div className="space-y-2">
-                                        <div className="flex items-center gap-2 text-sm">
-                                            <svg className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                            </svg>
-                                            <div>
-                                                <p className="font-medium text-gray-900">Pemula Aktif</p>
-                                                <p className="text-xs text-gray-500">Selesaikan 3 modul pertama</p>
-                                            </div>
+                                    {achievements.length > 0 ? (
+                                        <div className="space-y-2">
+                                            {achievements.map((achievement, index) => (
+                                                <div key={index} className="flex items-center gap-2 text-sm">
+                                                    <svg className={`w-5 h-5 ${achievement.unlocked ? 'text-yellow-500' : 'text-gray-300'}`} fill="currentColor" viewBox="0 0 20 20">
+                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                    </svg>
+                                                    <div>
+                                                        <p className={`font-medium ${achievement.unlocked ? 'text-gray-900' : 'text-gray-500'}`}>
+                                                            {achievement.title}
+                                                        </p>
+                                                        <p className={`text-xs ${achievement.unlocked ? 'text-gray-500' : 'text-gray-400'}`}>
+                                                            {achievement.description}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
-                                        <div className="flex items-center gap-2 text-sm">
-                                            <svg className="w-5 h-5 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
-                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                            </svg>
-                                            <div>
-                                                <p className="font-medium text-gray-500">Pemenang Sertif</p>
-                                                <p className="text-xs text-gray-400">Dapatkan 3 sertifikat (0/3 saat ini)</p>
-                                            </div>
+                                    ) : (
+                                        <div className="text-center py-4 text-gray-500">
+                                            <p className="text-sm">Belum ada pencapaian. Mulai belajar untuk mendapatkan badge!</p>
                                         </div>
-                                        <div className="flex items-center gap-2 text-sm">
-                                            <svg className="w-5 h-5 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
-                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                            </svg>
-                                            <div>
-                                                <p className="font-medium text-gray-500">Master Quiz</p>
-                                                <p className="text-xs text-gray-400">Selesaikan semua quiz dengan nilai 100%</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-2 text-sm">
-                                            <svg className="w-5 h-5 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
-                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                            </svg>
-                                            <div>
-                                                <p className="font-medium text-gray-500">Learner Konsisten</p>
-                                                <p className="text-xs text-gray-400">Login 7 hari berturut-turut</p>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -152,24 +115,14 @@ export default function ProfileEdit({ auth, stats, moduleProgress, videoProgress
                                 <div className="border-b">
                                     <div className="flex">
                                         <button
-                                            onClick={() => setActiveTab('modul')}
+                                            onClick={() => setActiveTab('course')}
                                             className={`px-6 py-3 font-medium text-sm border-b-2 transition ${
-                                                activeTab === 'modul'
+                                                activeTab === 'course'
                                                     ? 'border-green-600 text-green-600'
                                                     : 'border-transparent text-gray-600 hover:text-gray-900'
                                             }`}
                                         >
-                                            Progress Modul
-                                        </button>
-                                        <button
-                                            onClick={() => setActiveTab('video')}
-                                            className={`px-6 py-3 font-medium text-sm border-b-2 transition ${
-                                                activeTab === 'video'
-                                                    ? 'border-green-600 text-green-600'
-                                                    : 'border-transparent text-gray-600 hover:text-gray-900'
-                                            }`}
-                                        >
-                                            Progress Video
+                                            Progress Course
                                         </button>
                                         <button
                                             onClick={() => setActiveTab('aktivitas')}
@@ -186,85 +139,56 @@ export default function ProfileEdit({ auth, stats, moduleProgress, videoProgress
 
                                 {/* Tab Content */}
                                 <div className="p-6">
-                                    {activeTab === 'modul' && (
+                                    {activeTab === 'course' && (
                                         <div className="space-y-4">
-                                            {moduleProgress.map((item) => (
-                                                <div key={item.id} className="border-b pb-4 last:border-0">
-                                                    <div className="flex items-start justify-between mb-2">
-                                                        <div className="flex-1">
-                                                            <Link href={route('modules.show', item.slug)} className="font-semibold text-gray-900 hover:text-green-600">
-                                                                {item.title}
-                                                            </Link>
-                                                            <div className="flex items-center gap-2 mt-1">
-                                                                <span className={`text-xs px-2 py-0.5 rounded-full ${
-                                                                    item.status === 'Selesai' 
-                                                                        ? 'bg-green-100 text-green-700' 
-                                                                        : item.status === 'Sedang Berjalan'
-                                                                            ? 'bg-orange-100 text-orange-700'
-                                                                            : 'bg-gray-100 text-gray-700'
-                                                                }`}>
-                                                                    {item.status}
-                                                                </span>
-                                                                <span className="text-xs text-gray-500">
-                                                                    Terakhir diakses {item.lastAccessed}
-                                                                </span>
+                                            {courseProgress.length > 0 ? (
+                                                courseProgress.map((item) => (
+                                                    <div key={item.id} className="border-b pb-4 last:border-0">
+                                                        <div className="flex items-start justify-between mb-2">
+                                                            <div className="flex-1">
+                                                                <Link href={route('courses.show', item.id)} className="font-semibold text-gray-900 hover:text-green-600">
+                                                                    {item.title}
+                                                                </Link>
+                                                                <div className="flex items-center gap-2 mt-1">
+                                                                    <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                                                        item.progress === 100
+                                                                            ? 'bg-green-100 text-green-700' 
+                                                                            : item.progress > 0
+                                                                                ? 'bg-orange-100 text-orange-700'
+                                                                                : 'bg-gray-100 text-gray-700'
+                                                                    }`}>
+                                                                        {item.progress === 100 ? 'Selesai' : item.progress > 0 ? 'Sedang Berjalan' : 'Belum Dimulai'}
+                                                                    </span>
+                                                                    <span className="text-xs text-gray-500">
+                                                                        {item.completedContents}/{item.totalContents} lessons
+                                                                    </span>
+                                                                </div>
                                                             </div>
+                                                            <span className="text-sm font-bold text-gray-900">{Math.round(item.progress)}%</span>
                                                         </div>
-                                                        <span className="text-sm font-bold text-gray-900">{item.progress}%</span>
-                                                    </div>
-                                                    <div className="w-full bg-gray-200 rounded-full h-2">
-                                                        <div 
-                                                            className={`h-2 rounded-full ${
-                                                                item.progress === 100 
-                                                                    ? 'bg-green-600' 
-                                                                    : 'bg-orange-500'
-                                                            }`}
-                                                            style={{ width: `${item.progress}%` }}
-                                                        ></div>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-
-                                    {activeTab === 'video' && (
-                                        <div className="space-y-4">
-                                            {videoProgress.map((item) => (
-                                                <div key={item.id} className="border-b pb-4 last:border-0">
-                                                    <div className="flex items-start justify-between mb-2">
-                                                        <div className="flex-1">
-                                                            <Link href={route('videos.show', item.id)} className="font-semibold text-gray-900 hover:text-orange-600">
-                                                                {item.title}
-                                                            </Link>
-                                                            <div className="flex items-center gap-2 mt-1">
-                                                                <span className={`text-xs px-2 py-0.5 rounded-full ${
-                                                                    item.status === 'Selesai' 
-                                                                        ? 'bg-green-100 text-green-700' 
-                                                                        : item.status === 'Sedang Ditonton'
-                                                                            ? 'bg-blue-100 text-blue-700'
-                                                                            : 'bg-gray-100 text-gray-700'
-                                                                }`}>
-                                                                    {item.status}
-                                                                </span>
-                                                                <span className="text-xs text-gray-500">
-                                                                    {item.date}
-                                                                </span>
-                                                            </div>
+                                                        <div className="w-full bg-gray-200 rounded-full h-2">
+                                                            <div 
+                                                                className={`h-2 rounded-full ${
+                                                                    item.progress === 100
+                                                                        ? 'bg-green-600' 
+                                                                        : 'bg-orange-500'
+                                                                }`}
+                                                                style={{ width: `${item.progress}%` }}
+                                                            ></div>
                                                         </div>
-                                                        <span className="text-sm font-bold text-gray-900">{item.progress}%</span>
                                                     </div>
-                                                    <div className="w-full bg-gray-200 rounded-full h-2">
-                                                        <div 
-                                                            className={`h-2 rounded-full ${
-                                                                item.progress === 100 
-                                                                    ? 'bg-green-600' 
-                                                                    : 'bg-blue-500'
-                                                            }`}
-                                                            style={{ width: `${item.progress}%` }}
-                                                        ></div>
-                                                    </div>
+                                                ))
+                                            ) : (
+                                                <div className="text-center py-8 text-gray-500">
+                                                    <svg className="w-16 h-16 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                                    </svg>
+                                                    <p className="font-medium">Belum ada course yang diambil</p>
+                                                    <Link href={route('courses.index')} className="inline-block mt-3 text-green-600 hover:text-green-700 font-medium">
+                                                        Jelajahi Course →
+                                                    </Link>
                                                 </div>
-                                            ))}
+                                            )}
                                         </div>
                                     )}
 

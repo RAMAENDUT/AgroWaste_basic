@@ -76,95 +76,107 @@ class HomeController extends Controller
     {
         $user = Auth::user();
         
-        // Get user progress
-        $userProgress = UserModuleProgress::where('user_id', $user->id)->get();
+        // Get course enrollments
+        $enrollments = \App\Models\CourseEnrollment::where('user_id', $user->id)
+            ->with('course')
+            ->get();
         
         // Calculate stats
+        $completedCourses = $enrollments->where('progress_percentage', 100)->count();
+        
+        // Get all quiz attempts from course contents
+        $quizScores = [];
+        foreach ($enrollments as $enrollment) {
+            $courseContents = \App\Models\CourseContent::where('course_id', $enrollment->course_id)
+                ->where('type', 'quiz')
+                ->pluck('id');
+            
+            // Get best score for each quiz
+            foreach ($courseContents as $contentId) {
+                $bestScore = \App\Models\CourseQuizAttempt::where('user_id', $user->id)
+                    ->where('course_content_id', $contentId)
+                    ->max('score');
+                
+                if ($bestScore !== null) {
+                    $quizScores[] = $bestScore;
+                }
+            }
+        }
+        
+        $averageQuizScore = count($quizScores) > 0 ? round(array_sum($quizScores) / count($quizScores)) : 0;
+        
         $stats = [
-            'completedModules' => $userProgress->where('module_completed', true)->count(),
-            'completedVideos' => $userProgress->where('video_completed', true)->count(),
-            'passedQuizzes' => $userProgress->where('quiz_completed', true)->count(),
-            'averageScore' => round($userProgress->where('quiz_completed', true)->avg('quiz_score') ?? 0),
+            'completedCourses' => $completedCourses,
+            'averageQuizScore' => $averageQuizScore,
         ];
 
-        // Get module progress with details
-        $moduleProgress = Module::whereIn('id', $userProgress->pluck('module_id'))
-            ->get()
-            ->map(function($module) use ($userProgress) {
-                $progress = $userProgress->where('module_id', $module->id)->first();
-                $percentage = 0;
-                $status = 'Belum Dimulai';
-                
-                if ($progress) {
-                    $completed = 0;
-                    if ($progress->module_completed) $completed++;
-                    if ($progress->video_completed) $completed++;
-                    if ($progress->quiz_completed) $completed++;
-                    $percentage = round(($completed / 3) * 100);
-                    
-                    if ($percentage === 100) {
-                        $status = 'Selesai';
-                    } elseif ($percentage > 0) {
-                        $status = 'Sedang Berjalan';
-                    }
-                }
-                
-                return [
-                    'id' => $module->id,
-                    'slug' => $module->slug,
-                    'title' => $module->title,
-                    'status' => $status,
-                    'progress' => $percentage,
-                    'lastAccessed' => $progress ? $progress->updated_at->diffForHumans() : '-',
-                ];
-            });
-
-        // Get video progress
-        $videoProgress = \App\Models\Video::whereHas('module', function($query) use ($userProgress) {
-            $query->whereIn('id', $userProgress->pluck('module_id'));
-        })
-        ->take(5)
-        ->get()
-        ->map(function($video) use ($userProgress) {
-            $progress = $userProgress->where('module_id', $video->module_id)->first();
+        // Get course progress with details
+        $courseProgress = $enrollments->map(function($enrollment) use ($user) {
+            $course = $enrollment->course;
+            $totalContents = \App\Models\CourseContent::where('course_id', $course->id)
+                ->where('is_active', true)
+                ->count();
+            
+            $completedContents = \App\Models\CourseContentProgress::where('user_id', $user->id)
+                ->whereHas('content', function($q) use ($course) {
+                    $q->where('course_id', $course->id);
+                })
+                ->where('is_completed', true)
+                ->count();
+            
             return [
-                'id' => $video->id,
-                'title' => $video->title,
-                'status' => $progress && $progress->video_completed ? 'Selesai' : 'Belum',
-                'progress' => $progress && $progress->video_completed ? 100 : 0,
-                'date' => $video->created_at->format('d/m/Y'),
+                'id' => $course->id,
+                'title' => $course->title,
+                'progress' => $enrollment->progress_percentage,
+                'totalContents' => $totalContents,
+                'completedContents' => $completedContents,
             ];
         });
 
-        // Mock activities (can be enhanced with real activity tracking)
-        $activities = [
-            [
-                'action' => 'Menyelesaikan modul',
-                'description' => 'Pengenalan Limbah Pertanian - Selamat! Anda berhasil menyelesaikan modul ini',
-                'time' => '2 hari yang lalu',
-            ],
-            [
-                'action' => 'Menonton video',
-                'description' => 'Instalasi Biogas Sederhana',
-                'time' => '3 hari yang lalu',
-            ],
-            [
-                'action' => 'Mengikuti quiz',
-                'description' => 'Quiz: Teknik Komposting',
-                'time' => '5 hari yang lalu',
-            ],
-            [
-                'action' => 'Mendaftar kursus',
-                'description' => 'Selamat bergabung di AgroWaste Academy!',
-                'time' => '1 minggu yang lalu',
-            ],
+        // Get real user activities
+        $userActivities = \App\Models\UserActivity::where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->take(10)
+            ->get();
+
+        $activities = $userActivities->map(function($activity) {
+            return [
+                'action' => $activity->activity_title,
+                'description' => $activity->activity_description,
+                'time' => $activity->formatted_time,
+            ];
+        })->toArray();
+
+        // Calculate achievements based on actual progress
+        $achievements = [];
+        
+        // Pemula Aktif - Enroll 3 courses
+        $enrolledCount = $enrollments->count();
+        $achievements[] = [
+            'title' => 'Pemula Aktif',
+            'description' => 'Enroll 3 course pertama (' . min($enrolledCount, 3) . '/3)',
+            'unlocked' => $enrolledCount >= 3,
+        ];
+        
+        // Master Quiz - Get 100% average quiz score
+        $achievements[] = [
+            'title' => 'Master Quiz',
+            'description' => 'Dapatkan nilai rata-rata quiz 100%',
+            'unlocked' => $averageQuizScore == 100 && count($quizScores) > 0,
+        ];
+        
+        // Course Champion - Complete 5 courses
+        $achievements[] = [
+            'title' => 'Course Champion',
+            'description' => 'Selesaikan 5 course (' . min($completedCourses, 5) . '/5)',
+            'unlocked' => $completedCourses >= 5,
         ];
 
         return Inertia::render('Profile/Edit', [
             'stats' => $stats,
-            'moduleProgress' => $moduleProgress,
-            'videoProgress' => $videoProgress,
+            'courseProgress' => $courseProgress,
             'activities' => $activities,
+            'achievements' => $achievements,
         ]);
     }
 
