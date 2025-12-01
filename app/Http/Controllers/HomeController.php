@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Module;
+use App\Models\Course;
+use App\Models\CourseEnrollment;
+use App\Models\CourseModule;
+use App\Models\CourseModuleProgress;
 use App\Models\User;
-use App\Models\QuizAttempt;
-use App\Models\UserModuleProgress;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -14,48 +15,40 @@ class HomeController extends Controller
 {
     public function index()
     {
-        $userProgress = [];
-        $enrolledModules = 0;
-        $activeModules = 0;
-        $completedModules = 0;
-        $recentAttempts = [];
+        $enrolledCourses = 0;
+        $activeCourses = 0;
+        $completedCourses = 0;
         
         if (Auth::check()) {
-            $userProgress = UserModuleProgress::where('user_id', Auth::id())
-                ->with('module')
+            $enrollments = CourseEnrollment::where('user_id', Auth::id())
+                ->with('course')
                 ->get();
             
-            // Count enrolled modules (any progress)
-            $enrolledModules = $userProgress->count();
+            // Count enrolled courses
+            $enrolledCourses = $enrollments->count();
             
-            // Count active modules (started but not completed)
-            $activeModules = $userProgress->filter(function($progress) {
-                return !($progress->module_completed && $progress->video_completed && $progress->quiz_completed);
+            // Count active courses (started but not completed)
+            $activeCourses = $enrollments->filter(function($enrollment) {
+                return $enrollment->progress_percent > 0 && $enrollment->progress_percent < 100;
             })->count();
             
-            // Count completed modules (all parts done)
-            $completedModules = $userProgress->filter(function($progress) {
-                return $progress->module_completed && $progress->video_completed && $progress->quiz_completed;
+            // Count completed courses
+            $completedCourses = $enrollments->filter(function($enrollment) {
+                return $enrollment->progress_percent >= 100;
             })->count();
-
-            $recentAttempts = QuizAttempt::where('user_id', Auth::id())
-                ->with(['quiz.module'])
-                ->orderBy('created_at', 'desc')
-                ->take(5)
-                ->get();
         }
 
-        $modules = Module::where('is_active', true)
-            ->orderBy('order')
+        // Get published courses
+        $courses = Course::where('is_published', true)
+            ->orderBy('display_order')
             ->take(3)
             ->get();
 
         return Inertia::render('Home', [
-            'totalModules' => $enrolledModules,
-            'completedModules' => $completedModules,
-            'modules' => $modules,
-            'userProgress' => $userProgress,
-            'recentAttempts' => $recentAttempts,
+            'totalCourses' => $enrolledCourses,
+            'completedCourses' => $completedCourses,
+            'activeCourses' => $activeCourses,
+            'courses' => $courses,
         ]);
     }
 
@@ -77,75 +70,60 @@ class HomeController extends Controller
         $user = Auth::user();
         
         // Get course enrollments
-        $enrollments = \App\Models\CourseEnrollment::where('user_id', $user->id)
+        $enrollments = CourseEnrollment::where('user_id', $user->id)
             ->with('course')
             ->get();
         
         // Calculate stats
-        $completedCourses = $enrollments->where('progress_percentage', 100)->count();
+        $completedCourses = $enrollments->where('progress_percent', 100)->count();
         
-        // Get all quiz attempts from course contents
-        $quizScores = [];
-        foreach ($enrollments as $enrollment) {
-            $courseContents = \App\Models\CourseContent::where('course_id', $enrollment->course_id)
-                ->where('type', 'quiz')
-                ->pluck('id');
-            
-            // Get best score for each quiz
-            foreach ($courseContents as $contentId) {
-                $bestScore = \App\Models\CourseQuizAttempt::where('user_id', $user->id)
-                    ->where('course_content_id', $contentId)
-                    ->max('score');
-                
-                if ($bestScore !== null) {
-                    $quizScores[] = $bestScore;
-                }
-            }
-        }
-        
-        $averageQuizScore = count($quizScores) > 0 ? round(array_sum($quizScores) / count($quizScores)) : 0;
+        // Calculate average quiz score
+        $averageQuizScore = \DB::table('quiz_attempts')
+            ->where('user_id', $user->id)
+            ->avg('score');
         
         $stats = [
             'completedCourses' => $completedCourses,
-            'averageQuizScore' => $averageQuizScore,
+            'averageQuizScore' => $averageQuizScore ? round($averageQuizScore) : 0,
         ];
 
         // Get course progress with details
         $courseProgress = $enrollments->map(function($enrollment) use ($user) {
             $course = $enrollment->course;
-            $totalContents = \App\Models\CourseContent::where('course_id', $course->id)
-                ->where('is_active', true)
-                ->count();
+            $totalContents = CourseModule::where('course_id', $course->id)->count();
             
-            $completedContents = \App\Models\CourseContentProgress::where('user_id', $user->id)
-                ->whereHas('content', function($q) use ($course) {
-                    $q->where('course_id', $course->id);
-                })
+            $completedContents = CourseModuleProgress::where('user_id', $user->id)
+                ->where('course_id', $course->id)
                 ->where('is_completed', true)
                 ->count();
             
             return [
                 'id' => $course->id,
                 'title' => $course->title,
-                'progress' => $enrollment->progress_percentage,
+                'progress' => $enrollment->progress_percent,
                 'totalContents' => $totalContents,
                 'completedContents' => $completedContents,
             ];
         });
 
-        // Get real user activities
-        $userActivities = \App\Models\UserActivity::where('user_id', $user->id)
-            ->orderBy('created_at', 'desc')
+        // Get recent activities from module progress
+        $recentActivities = CourseModuleProgress::where('user_id', $user->id)
+            ->with(['course', 'courseModule'])
+            ->orderBy('completed_at', 'desc')
             ->take(10)
             ->get();
 
-        $activities = $userActivities->map(function($activity) {
+        $activities = $recentActivities->map(function($activity) {
             return [
-                'action' => $activity->activity_title,
-                'description' => $activity->activity_description,
-                'time' => $activity->formatted_time,
+                'id' => $activity->id,
+                'type' => $activity->courseModule->type === 'exercise' ? 'quiz' : 'module',
+                'title' => $activity->courseModule->title,
+                'course' => $activity->course->title,
+                'completed_at' => $activity->completed_at->diffForHumans(),
+                'icon' => $activity->courseModule->type === 'exercise' ? 'quiz' : 
+                         ($activity->courseModule->type === 'video' ? 'video' : 'module'),
             ];
-        })->toArray();
+        });
 
         // Calculate achievements based on actual progress
         $achievements = [];
@@ -159,10 +137,11 @@ class HomeController extends Controller
         ];
         
         // Master Quiz - Get 100% average quiz score
+        $averageScore = $stats['averageQuizScore'];
         $achievements[] = [
             'title' => 'Master Quiz',
-            'description' => 'Dapatkan nilai rata-rata quiz 100%',
-            'unlocked' => $averageQuizScore == 100 && count($quizScores) > 0,
+            'description' => 'Dapatkan nilai rata-rata quiz 100% (saat ini: ' . $averageScore . '%)',
+            'unlocked' => $averageScore >= 100,
         ];
         
         // Course Champion - Complete 5 courses

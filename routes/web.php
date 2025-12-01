@@ -3,15 +3,21 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\ModuleController;
-use App\Http\Controllers\VideoController;
-use App\Http\Controllers\QuizController;
+// use App\Http\Controllers\ModuleController;
+// use App\Http\Controllers\VideoController;
+// use App\Http\Controllers\QuizController;
 use App\Http\Controllers\CourseController;
-use App\Http\Controllers\CourseContentController;
+// use App\Http\Controllers\CourseContentController;
 
 // Test page (for debugging)
 Route::get('/test', function () {
     return \Inertia\Inertia::render('Test');
+});
+
+// Test course content
+Route::get('/test-course', function () {
+    $course = \App\Models\Course::with('modules')->first();
+    return response()->json($course);
 });
 
 // Debug auth
@@ -55,22 +61,18 @@ Route::middleware('auth')->group(function () {
     // Home/Dashboard
     Route::get('/home', [HomeController::class, 'index'])->name('home');
     
-    // Modules
-    Route::get('/modules', [ModuleController::class, 'index'])->name('modules.index');
-    Route::get('/modules/{slug}', [ModuleController::class, 'show'])->name('modules.show');
-    Route::post('/modules/{id}/complete', [ModuleController::class, 'markComplete'])->name('modules.complete');
-    
-    // Videos
-    Route::get('/videos', [VideoController::class, 'index'])->name('videos.index');
-    Route::get('/videos/{id}', [VideoController::class, 'show'])->name('videos.show');
-    Route::post('/videos/{id}/complete', [VideoController::class, 'complete'])->name('videos.complete');
-    
-    // Quizzes
-    Route::get('/quizzes', [QuizController::class, 'index'])->name('quizzes.index');
-    Route::get('/quizzes/{id}', [QuizController::class, 'show'])->name('quizzes.show');
-    Route::get('/quizzes/{id}/start', [QuizController::class, 'start'])->name('quizzes.start');
-    Route::post('/quizzes/{id}/submit', [QuizController::class, 'submit'])->name('quizzes.submit');
-    Route::get('/quizzes/result/{attemptId}', [QuizController::class, 'result'])->name('quizzes.result');
+    // OLD ROUTES - DISABLED (using old table structure)
+    // Route::get('/modules', [ModuleController::class, 'index'])->name('modules.index');
+    // Route::get('/modules/{slug}', [ModuleController::class, 'show'])->name('modules.show');
+    // Route::post('/modules/{id}/complete', [ModuleController::class, 'markComplete'])->name('modules.complete');
+    // Route::get('/videos', [VideoController::class, 'index'])->name('videos.index');
+    // Route::get('/videos/{id}', [VideoController::class, 'show'])->name('videos.show');
+    // Route::post('/videos/{id}/complete', [VideoController::class, 'complete'])->name('videos.complete');
+    // Route::get('/quizzes', [QuizController::class, 'index'])->name('quizzes.index');
+    // Route::get('/quizzes/{id}', [QuizController::class, 'show'])->name('quizzes.show');
+    // Route::get('/quizzes/{id}/start', [QuizController::class, 'start'])->name('quizzes.start');
+    // Route::post('/quizzes/{id}/submit', [QuizController::class, 'submit'])->name('quizzes.submit');
+    // Route::get('/quizzes/result/{attemptId}', [QuizController::class, 'result'])->name('quizzes.result');
     
     // Profile
     Route::get('/profile', [HomeController::class, 'profile'])->name('profile.edit');
@@ -80,8 +82,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
     Route::post('/courses/{id}/enroll', [CourseController::class, 'enroll'])->name('courses.enroll');
     Route::get('/courses/{id}', [CourseController::class, 'show'])->name('courses.show');
-    Route::get('/courses/{courseId}/content/{contentId}', [CourseContentController::class, 'show'])->name('course-contents.show');
-    Route::post('/courses/{courseId}/content/{contentId}/submit-quiz', [CourseContentController::class, 'submitQuiz'])->name('course-contents.submit-quiz');
+    
+    // Course Content (modules/videos/quiz)
+    Route::get('/courses/{courseId}/content/{contentId}', [CourseController::class, 'showContent'])->name('courses.content.show');
+    Route::post('/courses/{courseId}/content/{contentId}/complete', [CourseController::class, 'markComplete'])->name('courses.content.complete');
+    Route::post('/courses/{courseId}/content/{contentId}/submit-quiz', [CourseController::class, 'submitQuiz'])->name('courses.content.submit-quiz');
     
     // My Courses
     Route::get('/my-courses/on-progress', [CourseController::class, 'onProgress'])->name('my-courses.on-progress');

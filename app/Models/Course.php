@@ -11,17 +11,18 @@ class Course extends Model
 
     protected $fillable = [
         'title',
+        'slug',
         'description',
         'thumbnail',
         'level',
-        'duration_hours',
-        'order',
-        'is_active',
+        'duration_minutes',
+        'display_order',
+        'is_published',
     ];
 
-    public function contents()
+    public function modules()
     {
-        return $this->hasMany(CourseContent::class);
+        return $this->hasMany(CourseModule::class);
     }
 
     public function enrollments()

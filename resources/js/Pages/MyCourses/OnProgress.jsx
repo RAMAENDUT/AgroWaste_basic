@@ -44,13 +44,13 @@ export default function OnProgress({ auth, courses }) {
                                             <div className="flex justify-between items-center mb-1">
                                                 <span className="text-xs font-medium text-gray-700">Progress</span>
                                                 <span className="text-xs font-medium text-green-600">
-                                                    {Math.round(course.progress_percentage)}%
+                                                    {Math.round(course.progress_percentage || 0)}%
                                                 </span>
                                             </div>
                                             <div className="w-full bg-gray-200 rounded-full h-2">
                                                 <div
                                                     className="bg-gradient-to-r from-green-500 to-orange-500 h-2 rounded-full transition-all duration-300"
-                                                    style={{ width: `${course.progress_percentage}%` }}
+                                                    style={{ width: `${course.progress_percentage || 0}%` }}
                                                 ></div>
                                             </div>
                                         </div>

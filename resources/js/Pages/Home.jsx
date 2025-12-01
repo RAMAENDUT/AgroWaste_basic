@@ -1,21 +1,21 @@
 import LearningLayout from '@/Layouts/LearningLayout';
 import { Head, Link } from '@inertiajs/react';
 
-export default function Home({ totalModules, completedModules, modules, userProgress, auth }) {
+export default function Home({ totalCourses, completedCourses, activeCourses, courses, auth }) {
     return (
         <LearningLayout>
             <Head title="Home - AgroWaste Academy" />
-            <Hero auth={auth} totalModules={totalModules} completedModules={completedModules} />
+            <Hero auth={auth} totalCourses={totalCourses} completedCourses={completedCourses} />
             <MetricsBar />
             <Reasons />
             <Features />
-            <RecentModules modules={modules} userProgress={userProgress} />
+            <RecentCourses courses={courses} />
             <Cta />
         </LearningLayout>
     );
 }
 
-function Hero({ auth, totalModules, completedModules }) {
+function Hero({ auth, totalCourses, completedCourses }) {
     const greetingTime = () => {
         const hour = new Date().getHours();
         if (hour < 12) return 'Selamat Pagi';
@@ -39,11 +39,11 @@ function Hero({ auth, totalModules, completedModules }) {
                     </p>
                     
                     <div className="flex gap-3">
-                        <Link href={route('modules.index')} className="px-6 py-3 bg-yellow-500 hover:bg-yellow-400 text-neutral-900 font-bold text-sm rounded-lg shadow-lg">
+                        <Link href={route('courses.index')} className="px-6 py-3 bg-yellow-500 hover:bg-yellow-400 text-neutral-900 font-bold text-sm rounded-lg shadow-lg">
                             Mulai Belajar →
                         </Link>
-                        <Link href={route('modules.index')} className="px-6 py-3 bg-white/20 hover:bg-white/30 backdrop-blur text-white font-medium text-sm rounded-lg border border-white/30">
-                            Lihat Video
+                        <Link href={route('courses.index')} className="px-6 py-3 bg-white/20 hover:bg-white/30 backdrop-blur text-white font-medium text-sm rounded-lg border border-white/30">
+                            Lihat Courses
                         </Link>
                     </div>
                 </div>
@@ -81,76 +81,60 @@ function MetricsBar() {
 
 
 
-function RecentModules({ modules, userProgress }) {
-    if (!modules || modules.length === 0) return null;
-
-    const getProgressPercentage = (moduleId) => {
-        if (!Array.isArray(userProgress)) return 0;
-        const progress = userProgress.find(p => p.module_id === moduleId);
-        if (!progress) return 0;
-        
-        let completed = 0;
-        if (progress.module_completed) completed++;
-        if (progress.video_completed) completed++;
-        if (progress.quiz_completed) completed++;
-        
-        return Math.round((completed / 3) * 100);
-    };
-
-    const getModuleLevel = (index) => {
-        if (index === 0) return 'Pemula';
-        if (index === 1) return 'Menengah';
-        return 'Lanjutan';
-    };
+function RecentCourses({ courses }) {
+    if (!courses || courses.length === 0) return null;
 
     return (
         <section className="px-8 py-16 bg-white">
             <div className="max-w-6xl mx-auto">
                 <div className="flex items-center justify-between mb-8">
                     <div>
-                        <h2 className="text-2xl font-bold text-gray-900">Modul Populer</h2>
-                        <p className="text-sm text-gray-600 mt-1">Mulai belajar dari modul terpopuler</p>
+                        <h2 className="text-2xl font-bold text-gray-900">Course Populer</h2>
+                        <p className="text-sm text-gray-600 mt-1">Mulai belajar dari course terpopuler</p>
                     </div>
-                    <Link href={route('modules.index')} className="text-sm font-medium text-green-600 hover:text-green-700">
+                    <Link href={route('courses.index')} className="text-sm font-medium text-green-600 hover:text-green-700">
                         Lihat Semua →
                     </Link>
                 </div>
                 <div className="grid md:grid-cols-3 gap-6">
-                    {modules.map((module, index) => {
-                        const progressPercentage = getProgressPercentage(module.id);
+                    {courses.map((course, index) => {
                         return (
-                            <div key={module.id} className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-lg transition-shadow overflow-hidden group">
+                            <div key={course.id} className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-lg transition-shadow overflow-hidden group">
                                 <div className="relative h-40 bg-gradient-to-br from-green-400 to-blue-500">
-                                    <div className="absolute inset-0 flex items-center justify-center text-white text-5xl font-bold opacity-20">
-                                        {module.title.charAt(0)}
-                                    </div>
+                                    {course.thumbnail ? (
+                                        <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="absolute inset-0 flex items-center justify-center text-white text-5xl font-bold opacity-20">
+                                            {course.title.charAt(0)}
+                                        </div>
+                                    )}
                                     <div className="absolute top-3 right-3 bg-white px-3 py-1 rounded-full text-xs font-medium capitalize shadow">
-                                        {getModuleLevel(index)}
+                                        {course.level}
                                     </div>
                                 </div>
                                 <div className="p-5">
                                     <h3 className="font-bold text-base text-gray-900 mb-2 group-hover:text-green-600 transition-colors">
-                                        {module.title}
+                                        {course.title}
                                     </h3>
                                     <p className="text-xs text-gray-600 mb-4 line-clamp-2 leading-relaxed">
-                                        {module.description}
+                                        {course.description}
                                     </p>
                                     <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
                                         <span className="flex items-center gap-1">
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                             </svg>
-                                            3 modul
+                                            {course.total_contents} modul
                                         </span>
                                         <span className="flex items-center gap-1">
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                             </svg>
-                                            {(index + 1) * 60} menit
+                                            {course.duration_minutes} menit
                                         </span>
                                     </div>
                                     
-                                    <Link href={route('modules.show', module.slug)} className="block w-full text-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors">
+                                    <Link href={route('courses.show', course.id)} className="block w-full text-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors">
                                         Lihat Detail
                                     </Link>
                                 </div>
@@ -234,7 +218,7 @@ function Cta() {
                 <p className="text-base max-w-2xl mx-auto mb-8 leading-relaxed text-white/90">
                     Bergabunglah dengan ratusan petani yang telah merasakan manfaat pengelolaan limbah pertanian
                 </p>
-                <Link href={route('modules.index')} className="inline-block bg-white text-green-700 px-8 py-3 rounded-lg text-sm font-bold shadow-xl hover:bg-green-50 transform hover:scale-105 transition">
+                <Link href={route('courses.index')} className="inline-block bg-white text-green-700 px-8 py-3 rounded-lg text-sm font-bold shadow-xl hover:bg-green-50 transform hover:scale-105 transition">
                     Mulai Sekarang Gratis
                 </Link>
             </div>

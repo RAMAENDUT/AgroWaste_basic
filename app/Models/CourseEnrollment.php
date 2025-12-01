@@ -14,7 +14,7 @@ class CourseEnrollment extends Model
         'course_id',
         'enrolled_at',
         'completed_at',
-        'progress_percentage',
+        'progress_percent',
     ];
 
     protected $casts = [
@@ -34,22 +34,20 @@ class CourseEnrollment extends Model
 
     public function updateProgress()
     {
-        $totalContents = $this->course->contents()->where('is_active', true)->count();
+        $totalContents = CourseModule::where('course_id', $this->course_id)->count();
         
         if ($totalContents == 0) {
-            $this->progress_percentage = 0;
+            $this->progress_percent = 0;
             $this->save();
             return;
         }
 
-        $completedContents = CourseContentProgress::where('user_id', $this->user_id)
-            ->whereIn('course_content_id', $this->course->contents()->pluck('id'))
-            ->where('is_completed', true)
-            ->count();
+        // TODO: implement module progress tracking
+        $completedContents = 0;
 
-        $this->progress_percentage = round(($completedContents / $totalContents) * 100);
+        $this->progress_percent = round(($completedContents / $totalContents) * 100);
         
-        if ($this->progress_percentage >= 100) {
+        if ($this->progress_percent >= 100) {
             $this->completed_at = now();
         }
         
