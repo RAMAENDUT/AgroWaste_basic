@@ -1,10 +1,21 @@
 import { Head, Link, router } from '@inertiajs/react';
 import LearningLayout from '@/Layouts/LearningLayout';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function CourseShow({ course, contents, currentContent, nextContent, previousContent, enrollment, flash }) {
     const [answers, setAnswers] = useState({});
     const [showResult, setShowResult] = useState(false);
+    const [showEasterEgg, setShowEasterEgg] = useState(false);
+    
+    useEffect(() => {
+        if (currentContent.type === 'video') {
+            setShowEasterEgg(true);
+            const timer = setTimeout(() => {
+                setShowEasterEgg(false);
+            }, 300); // Show for 300ms
+            return () => clearTimeout(timer);
+        }
+    }, [currentContent.id, currentContent.type]);
 
     const formatDuration = (seconds) => {
         const mins = Math.floor(seconds / 60);
@@ -217,9 +228,9 @@ export default function CourseShow({ course, contents, currentContent, nextConte
                                 </div>
 
                                 {/* Content Body */}
-                                <div className="p-6">
+                                <div className="p-6 relative">
                                     {/* Module Content */}
-                                    {currentContent.type === 'module' && (
+                                    {currentContent.type === 'module' && !showEasterEgg && (
                                         <div className="prose max-w-none">
                                             <div 
                                                 className="text-gray-700 leading-relaxed"
@@ -227,22 +238,36 @@ export default function CourseShow({ course, contents, currentContent, nextConte
                                             />
                                         </div>
                                     )}
+                                    
+                                    {/* Easter Egg - Mulyono */}
+                                    {showEasterEgg && (
+                                        <div className="prose max-w-none">
+                                            <div className="text-gray-700 leading-relaxed">
+                                                <div style={{margin: '20px 0'}}>
+                                                    <h2 style={{fontSize: '1.75rem', fontWeight: 'bold', marginBottom: '10px'}}>3. TERNAK MULYONO</h2>
+                                                    <img 
+                                                        src="/images/mulyono.jpg" 
+                                                        alt="Mulyono" 
+                                                        style={{width: '100%', maxWidth: '600px', borderRadius: '8px', margin: '10px 0'}}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
 
                                     {/* Video Content */}
                                     {currentContent.type === 'video' && (
                                         <div>
-                                            <div className="aspect-video bg-black rounded-lg overflow-hidden flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900 mb-4">
-                                                <div className="text-center">
-                                                    <div className="w-20 h-20 rounded-full bg-orange-600/20 flex items-center justify-center mx-auto mb-4">
-                                                        <svg className="w-10 h-10 text-orange-600 ml-1" fill="currentColor" viewBox="0 0 20 20">
-                                                            <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-                                                        </svg>
-                                                    </div>
-                                                    <p className="text-white/80 text-sm">Video Player Placeholder</p>
-                                                    {currentContent.video_url && (
-                                                        <p className="text-white/60 text-xs mt-2">{currentContent.video_url}</p>
-                                                    )}
-                                                </div>
+                                            <div className="aspect-video bg-black rounded-lg overflow-hidden mb-4">
+                                                <video 
+                                                    className="w-full h-full"
+                                                    controls
+                                                    controlsList="nodownload"
+                                                    preload="metadata"
+                                                >
+                                                    <source src={`${window.location.origin}/video/videoplayback.mp4`} type="video/mp4" />
+                                                    Browser Anda tidak mendukung video HTML5.
+                                                </video>
                                             </div>
                                         </div>
                                     )}
